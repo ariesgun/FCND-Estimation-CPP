@@ -146,6 +146,7 @@ VectorXf QuadEstimatorEKF::PredictState(VectorXf curState, float dt, V3F accel, 
 {
   assert(curState.size() == QUAD_EKF_NUM_STATES);
   VectorXf predictedState = curState;
+
   // Predict the current state forward by time dt using current accelerations and body rates as input
   // INPUTS: 
   //   curState: starting state
@@ -166,7 +167,15 @@ VectorXf QuadEstimatorEKF::PredictState(VectorXf curState, float dt, V3F accel, 
   Quaternion<float> attitude = Quaternion<float>::FromEuler123_RPY(rollEst, pitchEst, curState(6));
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+  V3F accelI = attitude.Rotate_BtoI(accel);
 
+  predictedState(0) = curState(0) + dt * curState(3);
+  predictedState(1) = curState(1) + dt * curState(4);
+  predictedState(2) = curState(2) + dt * curState(5);
+  predictedState(3) = curState(3) + accelI.x * dt;
+  predictedState(4) = curState(4) + accelI.y * dt;
+  predictedState(5) = curState(5) - (float)CONST_GRAVITY * dt + accelI.z * dt;
+  predictedState(6) = predictedState(6);
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -193,8 +202,13 @@ MatrixXf QuadEstimatorEKF::GetRbgPrime(float roll, float pitch, float yaw)
   //   that your calculations are reasonable
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+  RbgPrime(0, 0) = -cos(pitch) * sin(yaw);
+  RbgPrime(0, 1) = -sin(roll) * sin(pitch) * sin(yaw) - cos(roll) * cos(yaw);
+  RbgPrime(0, 2) = -cos(roll) * sin(pitch) * sin(yaw) + sin(roll) * cos(yaw);
 
-
+  RbgPrime(1, 0) = cos(pitch) * cos(yaw);
+  RbgPrime(1, 1) = sin(roll) * sin(pitch) * cos(yaw) - cos(roll) * sin(yaw);
+  RbgPrime(1, 2) = cos(roll) * sin(pitch) * cos(yaw) + sin(roll) * sin(yaw);
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
   return RbgPrime;
@@ -239,8 +253,25 @@ void QuadEstimatorEKF::Predict(float dt, V3F accel, V3F gyro)
   gPrime.setIdentity();
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+  // Update the gPrime matrix
+  gPrime(0, 3) = dt;
+  gPrime(1, 4) = dt;
+  gPrime(2, 5) = dt;
 
-
+  MatrixXf input(3, 1);
+  input(0,0) = accel.x;
+  input(1,0) = accel.y;
+  input(2,0) = accel.z;
+  VectorXf term = RbgPrime * input;
+  gPrime(3, 6) = term(0) * dt;
+  gPrime(4, 6) = term(1) * dt;
+  gPrime(5, 6) = term(2) * dt;
+  
+  // Compute Cov
+  MatrixXf newCov(QUAD_EKF_NUM_STATES, QUAD_EKF_NUM_STATES);
+  newCov = gPrime * ekfCov * gPrime.transpose() + Q;
+  
+  ekfCov = newCov;
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
   ekfState = newState;
