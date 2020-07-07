@@ -70,5 +70,5 @@ QYawStd  = .1
 
 This is how the result is when using the real controller.
 
-
+![Step 6](./animations/task6.gif)
 
