@@ -1,40 +1,73 @@
 ## Project: Estimation Project
 ---
 
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  
+## The Tasks ##
 
-You're reading it! Below I describe how I addressed each rubric point and where in my code each point is handled.
+Once again, you will be building up your estimator in pieces.  At each step, there will be a set of success criteria that will be displayed both in the plots and in the terminal output to help you along the way.
 
-### Explain the Starter Code
+Project outline:
 
-#### 1. Explain the functionality of what's provided in `motion_planning.py` and `planning_utils.py`
-These scripts contain a basic planning implementation that includes...
+ - [Step 1: Sensor Noise](#step-1-sensor-noise)
+ - [Step 2: Attitude Estimation](#step-2-attitude-estimation)
+ - [Step 3: Prediction Step](#step-3-prediction-step)
+ - [Step 4: Magnetometer Update](#step-4-magnetometer-update)
+ - [Step 5: Closed Loop + GPS Update](#step-5-closed-loop--gps-update)
+ - [Step 6: Adding Your Controller](#step-6-adding-your-controller)
+ 
+### Step 1: Sensor Noise ###
 
-### Implementing Your Path Planning Algorithm
-
-#### 1. Set your global home position
-Here students should read the first line of the csv file, extract lat0 and lon0 as floating point values and use the self.set_home_position() method to set global home. Explain briefly how you accomplished this in your code.
-
-
-And here is a lovely picture of our downtown San Francisco environment from above!
-![Map of SF](./misc/map.png)
-
-#### 2. Set your current local position
-Here as long as you successfully determine your local position relative to global home you'll be all set. Explain briefly how you accomplished this in your code.
+The standard deviation can be computed using the following python script
+```
+import numpy as np
 
 
-Meanwhile, here's a picture of me flying through the trees!
-![Forest Flying](./misc/in_the_trees.png)
+```
 
-#### 3. Set grid start position from local position
-This is another step in adding flexibility to the start location. As long as it works you're good to go!
+Here is the values for `MeasuredStdDev_GPSPosXY` and `MeasuredStdDev_AccelXY`:
+```
+MeasuredStdDev_GPSPosXY = 0.657
+MeasuredStdDev_AccelXY = 0.49
+```
 
-#### 4. Set grid goal position from geodetic coords
-This step is to add flexibility to the desired goal location. Should be able to choose any (lat, lon) within the map and have it rendered to a goal location on the grid.
+![Step 1](./animations/task1.gif)
 
-#### 5. Modify A* to include diagonal motion (or replace A* altogether)
-Minimal requirement here is to modify the code in planning_utils() to update the A* implementation to include diagonal motions on the grid that have a cost of sqrt(2), but more creative solutions are welcome. Explain the code you used to accomplish this step.
+### Step 2: Attitude Estimation ###
 
-#### 6. Cull waypoints 
-For this step you can use a collinearity test or ray tracing method like Bresenham. The idea is simply to prune your path of unnecessary waypoints. Explain the code you used to accomplish this step.
+The implementation is based on "Estimation for Quadrotors" paper with a small modification.
+The predicted quaternion is calculated by multiplying a quaternion for euler angles and the quaternion for (IMU measurement * dt).
+A better estimation can be achieved as a result.
+
+![Step 2](./animations/task2.gif)
+
+### Step 3: Prediction Step ###
+
+The implementation is based on "Estimation for Quadrotos" paper.
+![Step 3](./animations/task3.gif)
+
+![Step 3b](./animations/task3b.gif)
+
+Here is the values for `QPosXYStd` and `QVelXYStd`:
+```
+QPosXYStd  = .01
+QVelXYStd = .2
+```
+
+### Step 4: Magnetometer Update ###
+
+Here is the values for `QYawStd `:
+```
+QYawStd  = .1
+```
+
+![Step 4](./animations/task4.gif)
+
+### Step 5: Closed Loop + GPS Update ###
+
+![Step 5](./animations/task5.gif)
+
+### Step 6: Adding Your Controller ###
+
+This is how the result is when using the real controller.
+
+
 
